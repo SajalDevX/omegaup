@@ -426,6 +426,61 @@ describe('ranking', () => {
       ]);
     });
 
+    it('Should only show the top placesToShowInChart users in the chart', () => {
+      const currentRanking: { [username: string]: number } = {};
+      const events: types.ScoreboardEvent[] = [];
+      for (let i = 0; i < 12; i++) {
+        const username = `user_${i}`;
+        currentRanking[username] = i;
+        events.push({
+          classname: 'user-rank-unranked',
+          username,
+          country: 'MX',
+          delta: i + 1,
+          is_invited: true,
+          problem: {
+            alias: 'problem_alias',
+            points: 100 - i,
+            penalty: 0,
+          },
+          total: {
+            points: 100 - i,
+            penalty: 0,
+          },
+        });
+      }
+
+      const { series } = onRankingEvents({
+        events,
+        currentRanking,
+        startTimestamp: Date.now() - 10000,
+        finishTimestamp: Date.now() + 10000,
+      });
+      expect(series.map((user) => user.name)).toEqual([
+        'user_0',
+        'user_1',
+        'user_2',
+        'user_3',
+        'user_4',
+        'user_5',
+        'user_6',
+        'user_7',
+        'user_8',
+        'user_9',
+      ]);
+
+      const { series: topThree } = onRankingEvents({
+        events,
+        currentRanking,
+        placesToShowInChart: 3,
+      });
+      expect(topThree.map((user) => user.name)).toEqual([
+        'user_0',
+        'user_1',
+        'user_2',
+      ]);
+    });
+
     it('Should get ranking chart options object', () => {
       const startTimestamp = Date.now() - 10000;
       const finishTimestamp = Date.now() + 10000;
